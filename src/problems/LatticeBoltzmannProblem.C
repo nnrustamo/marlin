@@ -34,7 +34,7 @@ LatticeBoltzmannProblem::validParams()
 
   params.addParam<unsigned int>("substeps", 1, "Number of LBM iterations for every MOOSE timestep");
   params.addParam<unsigned int>("log_interval", 1, "Interval for logging LBM substep information");
-  params.addParam<Real>("tolerance", 1.0e-15, "LBM convergence tolerance");
+  params.addParam<Real>("tolerance", 1.0e-10, "LBM convergence tolerance");
   params.addClassDescription("Problem object to enable solving lattice Boltzmann problems");
 
   return params;
