@@ -75,6 +75,17 @@ LatticeBoltzmannProblem::init()
   // dependency resolution of boundary conditions
   DependencyResolverInterface::sort(_bcs);
 
+  // with a solver, its root compute (usually a ComputeGroup) already contains the computes it
+  // needs, so running all of _computes as well would execute each of them twice per substep
+  _substep_computes = _computes;
+  if (_solver)
+  {
+    const auto & root_name = _solver->getParam<TensorComputeName>("root_compute");
+    for (const auto & cmp : _computes)
+      if (cmp->name() == root_name)
+        _substep_computes = {cmp};
+  }
+
   // cache reference to residual monitoring tensor
   if (_is_residual_compute)
     _residual_tensor = getBuffer(getParam<TensorInputBufferName>("residual_tensor"), _ghost_radius);
@@ -142,7 +153,7 @@ LatticeBoltzmannProblem::execute(const ExecFlagType & exec_type)
         bc->realSpaceComputeBuffer();
 
       // run computes
-      for (auto & cmp : _computes)
+      for (auto & cmp : _substep_computes)
         cmp->computeBuffer();
 
       if (_is_residual_compute && substep % _log_interval == 0)
@@ -232,8 +243,8 @@ LatticeBoltzmannProblem::maskedFillSolids(torch::Tensor & t, const Real & value)
 
   // fast path for contiguous tensors over the owned nodes: fill only the solid rows, so the cost
   // scales with the number of solid nodes instead of every entry of t
-  if (value == 0 && _solid_index.defined() && t.is_contiguous() &&
-      t.dim() >= _solid_mask.dim() && t.sizes().slice(0, _solid_mask.dim()) == _solid_mask.sizes())
+  if (value == 0 && _solid_index.defined() && t.is_contiguous() && t.dim() >= _solid_mask.dim() &&
+      t.sizes().slice(0, _solid_mask.dim()) == _solid_mask.sizes())
   {
     t.view({_solid_mask.numel(), -1}).index_fill_(0, _solid_index, value);
     return;
