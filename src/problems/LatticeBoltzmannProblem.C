@@ -248,3 +248,19 @@ LatticeBoltzmannProblem::maskedFillSolids(torch::Tensor & t, const Real & value)
     }
   }
 }
+
+void
+LatticeBoltzmannProblem::maskedFillSolids(torch::Tensor & t, const std::vector<int> & values)
+{
+  if (!_is_binary_media)
+    return;
+
+  auto solid_mask = torch::zeros_like(_binary_media_owned, torch::kBool);
+  for (const auto value : values)
+    solid_mask.logical_or_(_binary_media_owned == value);
+
+  if (t.dim() == _binary_media_owned.dim())
+    t.masked_fill_(solid_mask, 0);
+  else
+    t.masked_fill_(solid_mask.unsqueeze(-1).expand(t.sizes()), 0);
+}

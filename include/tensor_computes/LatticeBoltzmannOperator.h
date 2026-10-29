@@ -43,4 +43,7 @@ protected:
 
   // radius of the stencil
   const unsigned int _radius;
+
+  /// binary media values where the output buffer is reset to zero
+  const std::vector<int> _solid_values;
 };

@@ -51,6 +51,8 @@ public:
 
   /// sets tensor to a value (normally zeros) at solid nodes
   void maskedFillSolids(torch::Tensor & t, const Real & value);
+  /// sets tensor to a value (normally zeros) at given set of nodes
+  void maskedFillSolids(torch::Tensor & t, const std::vector<int> & values);
 
 protected:
   void computeLBMResidual();
